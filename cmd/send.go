@@ -41,7 +41,7 @@ type response struct {
 	err error
 }
 
-func (e *EmailService) SendEmail() {
+func (e *EmailService) SendEmail() error {
 	to := strings.Join(e.To, ",")
 	message := "To: " + to + "\r\n" +
 		"Subject: " + e.Subject + "\r\n" +
@@ -49,10 +49,7 @@ func (e *EmailService) SendEmail() {
 
 	auth := smtp.PlainAuth("", e.From, e.Password, string(e.EmailType))
 
-	err := smtp.SendMail(string(e.EmailType)+fmt.Sprintf(":%d", e.Port), auth, e.From, e.To, []byte(message))
-	if err != nil {
-		log.Fatal(err)
-	}
+	return smtp.SendMail(string(e.EmailType)+fmt.Sprintf(":%d", e.Port), auth, e.From, e.To, []byte(message))
 }
 
 // sendCmd represents the send command
@@ -90,7 +87,10 @@ var sendCmd = &cobra.Command{
 		err = spinner.New().
 			Title("Sending Email").
 			Action(func() {
-				emailService.SendEmail()
+				err := emailService.SendEmail()
+				if err != nil {
+					log.Fatal(err)
+				}
 			}).
 			Run()
 
